@@ -24,9 +24,17 @@ function initCsNavToggle() {
 }
 
 // Points the header/footer "CBT main site" links at cfg.site.mainSiteUrl —
-// same header/footer markup on every page in this microsite.
+// same header/footer markup on every page in this microsite. Hidden
+// entirely while that's unset (this site is now fully standalone; no
+// confirmed "official" main-site URL to link back to yet).
 function initMainSiteLinks(cfg) {
   const navLink = document.getElementById("mainSiteNavLink");
+  const footerWrap = document.getElementById("mainSiteFooterWrap");
+  if (!cfg.site.mainSiteUrl) {
+    if (navLink) navLink.hidden = true;
+    if (footerWrap) footerWrap.hidden = true;
+    return;
+  }
   const footerLink = document.getElementById("mainSiteFooterLink");
   if (navLink) navLink.href = cfg.site.mainSiteUrl;
   if (footerLink) footerLink.href = cfg.site.mainSiteUrl;

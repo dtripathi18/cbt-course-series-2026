@@ -8,9 +8,11 @@ const COURSE_SERIES_CONFIG = {
   site: {
     title: "CBT Course Series",
     wordmark: "CBT / 2026",
-    // Now a standalone site (cbtcourseseries2026.tech) — this is an
-    // absolute URL rather than "../index.html" for that reason.
-    mainSiteUrl: "https://dtripathi18.github.io/cbt-website/",
+    // TODO: fill in once decided (e.g. the institute's official
+    // cbt.iitd.ac.in, once live). Empty on purpose for now — this site is
+    // fully standalone and the header/footer "CBT main site" links hide
+    // themselves while this is unset (see initMainSiteLinks in shared.js).
+    mainSiteUrl: "",
   },
 
   event: {
