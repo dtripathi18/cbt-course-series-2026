@@ -386,6 +386,10 @@ a { color: var(--cs-accent-dark); }
 
 /* ---------- Submit ---------- */
 .cs-submit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
   align-self: flex-start;
   margin-left: var(--cs-rail);
   padding: 15px 36px;
@@ -400,6 +404,22 @@ a { color: var(--cs-accent-dark); }
   transition: background 0.15s ease;
 }
 .cs-submit:hover { background: var(--cs-accent-dark); }
+.cs-submit:disabled { cursor: not-allowed; opacity: 0.85; }
+
+.cs-spinner {
+  width: 17px;
+  height: 17px;
+  border: 2.5px solid rgba(255, 255, 255, 0.4);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: cs-spin 0.7s linear infinite;
+}
+@keyframes cs-spin {
+  to { transform: rotate(360deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cs-spinner { animation: none; }
+}
 
 .cs-submit-note {
   margin-left: var(--cs-rail);

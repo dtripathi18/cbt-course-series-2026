@@ -192,6 +192,8 @@
   const form = document.getElementById("regForm");
   const submitNote = document.getElementById("submitNote");
   const submitBtn = form.querySelector(".cs-submit");
+  const submitSpinner = document.getElementById("submitSpinner");
+  const submitBtnLabel = document.getElementById("submitBtnLabel");
 
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -221,6 +223,8 @@
     }
 
     submitBtn.disabled = true;
+    submitSpinner.hidden = false;
+    submitBtnLabel.textContent = "Submitting…";
     submitNote.hidden = false;
     submitNote.className = "cs-submit-note cs-submit-note--pending";
     submitNote.textContent = "Submitting…";
@@ -271,6 +275,8 @@
       submitNote.className = "cs-submit-note cs-submit-note--error";
       submitNote.textContent = "Something went wrong preparing your registration. Please try again.";
       submitBtn.disabled = false;
+      submitSpinner.hidden = true;
+      submitBtnLabel.textContent = "Submit Registration";
       return;
     }
 
