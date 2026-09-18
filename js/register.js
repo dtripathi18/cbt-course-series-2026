@@ -225,6 +225,13 @@
     submitNote.className = "cs-submit-note cs-submit-note--pending";
     submitNote.textContent = "Submitting…";
 
+    // Warn against closing/refreshing mid-submit — Apps Script may have
+    // already saved the registration server-side by the time the request
+    // is in flight, so leaving early risks an accidental duplicate
+    // submission on retry rather than actually cancelling anything.
+    const warnBeforeUnload = (evt) => { evt.preventDefault(); };
+    window.addEventListener("beforeunload", warnBeforeUnload);
+
     let payload;
     try {
       const screenshotFile = document.getElementById("fScreenshot").files[0];
@@ -260,6 +267,7 @@
     } catch (err) {
       // A real, pre-send failure (e.g. the screenshot couldn't be read) —
       // nothing was sent, so it's correct to stay here and let them retry.
+      window.removeEventListener("beforeunload", warnBeforeUnload);
       submitNote.className = "cs-submit-note cs-submit-note--error";
       submitNote.textContent = "Something went wrong preparing your registration. Please try again.";
       submitBtn.disabled = false;
@@ -267,23 +275,36 @@
     }
 
     try {
-      await fetch(cfg.submitEndpointUrl, {
-        method: "POST",
-        mode: "no-cors",
-        headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body: JSON.stringify(payload),
-      });
+      // A hard cap on how long "Submitting…" can hang for — Apps Script Web
+      // Apps have no fixed response time, and without this a truly stalled
+      // connection could sit here for minutes with no feedback. Past this
+      // point we give up waiting (not up on the submission itself — see the
+      // catch below) rather than leave the user stuck.
+      const timeoutController = new AbortController();
+      const timeoutId = setTimeout(() => timeoutController.abort(), 25000);
+      try {
+        await fetch(cfg.submitEndpointUrl, {
+          method: "POST",
+          mode: "no-cors",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify(payload),
+          signal: timeoutController.signal,
+        });
+      } finally {
+        clearTimeout(timeoutId);
+      }
     } catch (networkErr) {
       // Apps Script Web Apps execute doPost() — and already write the Sheet
       // row / send the email — on the initial POST, then 302-redirect to a
       // separate domain purely to deliver the response back to the browser.
-      // On a slow/flaky connection that second hop can fail even though the
-      // registration was already recorded, so a rejected fetch here isn't a
-      // reliable failure signal. We don't show an error for it; the
-      // thank-you page's 24–48h note is the real safety net for genuine
-      // delivery failures.
+      // On a slow/flaky connection (or our own 25s timeout above) that
+      // second hop can fail even though the registration was already
+      // recorded, so a rejected/aborted fetch here isn't a reliable failure
+      // signal. We don't show an error for it; the thank-you page's 24–48h
+      // note is the real safety net for genuine delivery failures.
     }
 
+    window.removeEventListener("beforeunload", warnBeforeUnload);
     window.location.href = "thank-you.html";
   });
 })();

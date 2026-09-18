@@ -9,8 +9,35 @@ const FOLDER_ID = "1GnQRJBjWx7YHsRr7KPucoc7UCsQi0Dex"; // payment screenshot upl
 const CONTACT_EMAIL = "coe.biopharma.course@gmail.com";
 
 function doPost(e) {
+  // Apps Script Web Apps can execute concurrent requests for the same
+  // deployment — without this lock, two near-simultaneous submissions
+  // (e.g. a refresh-and-retry racing the original request) could both pass
+  // the duplicate check below before either has written its row. Holding
+  // the lock across the whole request serializes registrations so that
+  // check-then-write is atomic.
+  const lock = LockService.getScriptLock();
+  try {
+    lock.waitLock(10000);
+  } catch (lockErr) {
+    return ContentService
+      .createTextOutput(JSON.stringify({ status: "error", message: "Server busy, please retry." }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+
   try {
     const data = JSON.parse(e.postData.contents);
+    const sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+
+    // Same email + transaction ID already on record — almost certainly a
+    // retried submission (refresh, timeout, double-click that slipped past
+    // the client-side guard) rather than a genuine second registration.
+    // Skip writing a duplicate row, uploading a duplicate screenshot, and
+    // re-sending the confirmation email.
+    if (isDuplicateSubmission(sheet, data)) {
+      return ContentService
+        .createTextOutput(JSON.stringify({ status: "duplicate" }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
 
     let screenshotUrl = "";
     if (data.screenshotBase64) {
@@ -26,7 +53,6 @@ function doPost(e) {
       screenshotUrl = file.getUrl();
     }
 
-    const sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
     sheet.appendRow([
       new Date(),
       data.name || "",
@@ -69,7 +95,24 @@ function doPost(e) {
     return ContentService
       .createTextOutput(JSON.stringify({ status: "error", message: String(err) }))
       .setMimeType(ContentService.MimeType.JSON);
+  } finally {
+    lock.releaseLock();
   }
+}
+
+// Matches on email + transaction ID together (not email alone — the same
+// person could legitimately have a reason to submit twice with different
+// transactions, but the same transaction ID showing up twice means it's the
+// same submission). Columns: 0 Timestamp, 3 Email, 16 Transaction ID.
+function isDuplicateSubmission(sheet, data) {
+  if (!data.email || !data.txnId) return false;
+  const rows = sheet.getDataRange().getValues();
+  for (let i = 1; i < rows.length; i++) {
+    if (rows[i][3] === data.email && rows[i][16] === data.txnId) {
+      return true;
+    }
+  }
+  return false;
 }
 
 // One-time setup helper: select this function in the editor's function
