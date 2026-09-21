@@ -8,11 +8,9 @@ const COURSE_SERIES_CONFIG = {
   site: {
     title: "CBT Course Series",
     wordmark: "CBT / 2026",
-    // TODO: fill in once decided (e.g. the institute's official
-    // cbt.iitd.ac.in, once live). Empty on purpose for now — this site is
-    // fully standalone and the header/footer "CBT main site" links hide
-    // themselves while this is unset (see initMainSiteLinks in shared.js).
-    mainSiteUrl: "",
+    // The header/footer "CBT main site" links point here; they hide
+    // themselves if this is left empty (see initMainSiteLinks in shared.js).
+    mainSiteUrl: "https://cbt.iitd.ac.in/",
   },
 
   event: {
