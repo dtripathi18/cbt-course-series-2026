@@ -170,5 +170,5 @@ const COURSE_SERIES_CONFIG = {
 
   // Apps Script Web App (course-series/apps-script/Code.gs), deployed and
   // bound to the registrations Sheet + Drive folder.
-  submitEndpointUrl: "https://script.google.com/macros/s/AKfycbzauAeVA8Q9N6GnTTDQ1l03En5dPCh_xus3u-mxHwCKSRgCEtPhrmef5eonHb96q2q0/exec",
+  submitEndpointUrl: "https://script.google.com/macros/s/AKfycbx1XRtNAskq7Z4KVDh2HNKBI4T-12_zyYbLWUg6Pfyzy9SrO6SNZ3DPTTBaMXKlwlk9/exec",
 };
